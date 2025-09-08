@@ -4,12 +4,113 @@ MongoDB database configuration and setup for Mergington High School API
 
 from pymongo import MongoClient
 from argon2 import PasswordHasher
+import logging
 
-# Connect to MongoDB
-client = MongoClient('mongodb://localhost:27017/')
-db = client['mergington_high']
-activities_collection = db['activities']
-teachers_collection = db['teachers']
+# Initialize in-memory storage as fallback
+in_memory_activities = {}
+in_memory_teachers = {}
+using_in_memory = False
+
+try:
+    # Connect to MongoDB
+    client = MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=5000)
+    # Test connection
+    client.admin.command('ping')
+    db = client['mergington_high']
+    activities_collection = db['activities']
+    teachers_collection = db['teachers']
+    print("Connected to MongoDB successfully")
+except Exception as e:
+    print(f"MongoDB connection failed, using in-memory storage: {e}")
+    using_in_memory = True
+    
+    # Mock collection classes for in-memory storage
+    class InMemoryCollection:
+        def __init__(self, storage):
+            self.storage = storage
+            
+        def count_documents(self, filter_dict):
+            return len(self.storage)
+            
+        def insert_one(self, document):
+            doc_id = document.get('_id')
+            if doc_id:
+                self.storage[doc_id] = {k: v for k, v in document.items() if k != '_id'}
+            return True
+            
+        def find_one(self, filter_dict):
+            if '_id' in filter_dict:
+                doc_id = filter_dict['_id']
+                if doc_id in self.storage:
+                    result = {'_id': doc_id}
+                    result.update(self.storage[doc_id])
+                    return result
+            return None
+            
+        def find(self, filter_dict=None):
+            if filter_dict is None:
+                filter_dict = {}
+            results = []
+            for doc_id, doc_data in self.storage.items():
+                doc = {'_id': doc_id}
+                doc.update(doc_data)
+                results.append(doc)
+            return results
+            
+        def update_one(self, filter_dict, update_dict):
+            if '_id' in filter_dict:
+                doc_id = filter_dict['_id']
+                if doc_id in self.storage:
+                    if '$push' in update_dict:
+                        for field, value in update_dict['$push'].items():
+                            if field.startswith('sub_activities.$.'):
+                                # Handle sub-activity updates
+                                sub_field = field.split('.')[-1]
+                                if 'sub_activities' in self.storage[doc_id]:
+                                    for sub_activity in self.storage[doc_id]['sub_activities']:
+                                        if 'sub_activities.id' in filter_dict:
+                                            if sub_activity.get('id') == filter_dict['sub_activities.id']:
+                                                if sub_field not in sub_activity:
+                                                    sub_activity[sub_field] = []
+                                                sub_activity[sub_field].append(value)
+                                                return type('Result', (), {'modified_count': 1})()
+                            else:
+                                if field not in self.storage[doc_id]:
+                                    self.storage[doc_id][field] = []
+                                self.storage[doc_id][field].append(value)
+                                return type('Result', (), {'modified_count': 1})()
+                    elif '$pull' in update_dict:
+                        for field, value in update_dict['$pull'].items():
+                            if field.startswith('sub_activities.$.'):
+                                # Handle sub-activity updates
+                                sub_field = field.split('.')[-1]
+                                if 'sub_activities' in self.storage[doc_id]:
+                                    for sub_activity in self.storage[doc_id]['sub_activities']:
+                                        if 'sub_activities.id' in filter_dict:
+                                            if sub_activity.get('id') == filter_dict['sub_activities.id']:
+                                                if sub_field in sub_activity and value in sub_activity[sub_field]:
+                                                    sub_activity[sub_field].remove(value)
+                                                    return type('Result', (), {'modified_count': 1})()
+                            else:
+                                if field in self.storage[doc_id] and value in self.storage[doc_id][field]:
+                                    self.storage[doc_id][field].remove(value)
+                                    return type('Result', (), {'modified_count': 1})()
+            return type('Result', (), {'modified_count': 0})()
+            
+        def aggregate(self, pipeline):
+            # Simple implementation for getting unique days
+            results = []
+            all_days = set()
+            for doc_id, doc_data in self.storage.items():
+                if 'schedule_details' in doc_data and 'days' in doc_data['schedule_details']:
+                    for day in doc_data['schedule_details']['days']:
+                        all_days.add(day)
+            for day in sorted(all_days):
+                results.append({'_id': day})
+            return results
+    
+    activities_collection = InMemoryCollection(in_memory_activities)
+    teachers_collection = InMemoryCollection(in_memory_teachers)
 
 # Methods
 def hash_password(password):
@@ -41,7 +142,35 @@ initial_activities = {
             "end_time": "16:45"
         },
         "max_participants": 12,
-        "participants": ["michael@mergington.edu", "daniel@mergington.edu"]
+        "participants": ["michael@mergington.edu", "daniel@mergington.edu"],
+        "sub_activities": [
+            {
+                "id": "chess_practice",
+                "name": "Chess Practice",
+                "description": "Regular practice sessions for all skill levels",
+                "schedule": "Mondays, 3:15 PM - 4:45 PM",
+                "schedule_details": {
+                    "days": ["Monday"],
+                    "start_time": "15:15",
+                    "end_time": "16:45"
+                },
+                "max_participants": 12,
+                "participants": ["michael@mergington.edu"]
+            },
+            {
+                "id": "chess_tournament",
+                "name": "Chess Tournament",
+                "description": "Competitive chess matches",
+                "schedule": "Fridays, 3:15 PM - 4:45 PM",
+                "schedule_details": {
+                    "days": ["Friday"],
+                    "start_time": "15:15",
+                    "end_time": "16:45"
+                },
+                "max_participants": 8,
+                "participants": ["daniel@mergington.edu"]
+            }
+        ]
     },
     "Programming Class": {
         "description": "Learn programming fundamentals and build software projects",
@@ -107,7 +236,35 @@ initial_activities = {
             "end_time": "17:30"
         },
         "max_participants": 20,
-        "participants": ["ella@mergington.edu", "scarlett@mergington.edu"]
+        "participants": ["ella@mergington.edu", "scarlett@mergington.edu"],
+        "sub_activities": [
+            {
+                "id": "drama_auditions",
+                "name": "Auditions",
+                "description": "Try out for our upcoming spring play",
+                "schedule": "Mondays, 3:30 PM - 5:30 PM",
+                "schedule_details": {
+                    "days": ["Monday"],
+                    "start_time": "15:30",
+                    "end_time": "17:30"
+                },
+                "max_participants": 20,
+                "participants": ["ella@mergington.edu"]
+            },
+            {
+                "id": "drama_rehearsals",
+                "name": "Rehearsals",
+                "description": "Practice for the spring play performance",
+                "schedule": "Wednesdays, 3:30 PM - 5:30 PM",
+                "schedule_details": {
+                    "days": ["Wednesday"],
+                    "start_time": "15:30",
+                    "end_time": "17:30"
+                },
+                "max_participants": 15,
+                "participants": ["scarlett@mergington.edu"]
+            }
+        ]
     },
     "Math Club": {
         "description": "Solve challenging problems and prepare for math competitions",

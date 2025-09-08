@@ -477,7 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
 
-    // Calculate spots and capacity
+    // Calculate spots and capacity for main activity
     const totalSpots = details.max_participants;
     const takenSpots = details.participants.length;
     const spotsLeft = totalSpots - takenSpots;
@@ -519,6 +519,98 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    // Generate sub-activities HTML if they exist
+    let subActivitiesHtml = '';
+    if (details.sub_activities && details.sub_activities.length > 0) {
+      const subActivitiesListHtml = details.sub_activities.map(subActivity => {
+        const subTotalSpots = subActivity.max_participants;
+        const subTakenSpots = subActivity.participants.length;
+        const subSpotsLeft = subTotalSpots - subTakenSpots;
+        const subCapacityPercentage = (subTakenSpots / subTotalSpots) * 100;
+        const subIsFull = subSpotsLeft <= 0;
+
+        let subCapacityStatusClass = "capacity-available";
+        if (subIsFull) {
+          subCapacityStatusClass = "capacity-full";
+        } else if (subCapacityPercentage >= 75) {
+          subCapacityStatusClass = "capacity-near-full";
+        }
+
+        const subFormattedSchedule = formatSchedule(subActivity);
+
+        return `
+          <div class="sub-activity-item">
+            <h6>${subActivity.name}</h6>
+            <p class="sub-activity-description">${subActivity.description}</p>
+            <p class="sub-activity-schedule"><strong>Schedule:</strong> ${subFormattedSchedule}</p>
+            <div class="capacity-container ${subCapacityStatusClass}">
+              <div class="capacity-bar-bg">
+                <div class="capacity-bar-fill" style="width: ${subCapacityPercentage}%"></div>
+              </div>
+              <div class="capacity-text">
+                <span>${subTakenSpots} enrolled</span>
+                <span>${subSpotsLeft} spots left</span>
+              </div>
+            </div>
+            <div class="participants-list">
+              <h6>Participants:</h6>
+              <ul>
+                ${subActivity.participants
+                  .map(
+                    (email) => `
+                  <li>
+                    ${email}
+                    ${
+                      currentUser
+                        ? `
+                      <span class="delete-participant tooltip" data-activity="${name}" data-email="${email}" data-sub-activity="${subActivity.id}">
+                        ✖
+                        <span class="tooltip-text">Unregister this student</span>
+                      </span>
+                    `
+                        : ""
+                    }
+                  </li>
+                `
+                  )
+                  .join("")}
+              </ul>
+            </div>
+            ${
+              currentUser
+                ? `
+                <button class="register-button sub-activity-register" data-activity="${name}" data-sub-activity="${subActivity.id}" ${
+                    subIsFull ? "disabled" : ""
+                  }>
+                  ${subIsFull ? "Full" : "Register Student"}
+                </button>
+              `
+                : `
+                <div class="auth-notice">
+                  Teachers can register students.
+                </div>
+              `
+            }
+          </div>
+        `;
+      }).join('');
+
+      subActivitiesHtml = `
+        <div class="sub-activities-section">
+          <div class="sub-activities-header">
+            <h5>Available Sessions:</h5>
+            <button class="sub-activities-toggle" data-expanded="false">
+              <span class="toggle-text">Show Sessions</span>
+              <span class="toggle-icon">▼</span>
+            </button>
+          </div>
+          <div class="sub-activities-list hidden">
+            ${subActivitiesListHtml}
+          </div>
+        </div>
+      `;
+    }
+
     activityCard.innerHTML = `
       ${tagHtml}
       <h4>${name}</h4>
@@ -552,6 +644,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      ${subActivitiesHtml}
       <div class="activity-card-actions">
         ${
           currentUser
@@ -577,14 +670,49 @@ document.addEventListener("DOMContentLoaded", () => {
       button.addEventListener("click", handleUnregister);
     });
 
-    // Add click handler for register button (only when authenticated)
+    // Add click handler for main register button (only when authenticated)
     if (currentUser) {
-      const registerButton = activityCard.querySelector(".register-button");
-      if (!isFull) {
+      const registerButton = activityCard.querySelector(".register-button:not(.sub-activity-register)");
+      if (registerButton && !isFull) {
         registerButton.addEventListener("click", () => {
           openRegistrationModal(name);
         });
       }
+
+      // Add click handlers for sub-activity register buttons
+      const subRegisterButtons = activityCard.querySelectorAll(".sub-activity-register");
+      subRegisterButtons.forEach((button) => {
+        if (!button.disabled) {
+          button.addEventListener("click", () => {
+            const subActivityId = button.getAttribute("data-sub-activity");
+            const subActivity = details.sub_activities.find(sa => sa.id === subActivityId);
+            openRegistrationModal(name, subActivityId, subActivity ? subActivity.name : "Sub-activity");
+          });
+        }
+      });
+    }
+
+    // Add click handler for sub-activities toggle
+    const toggleButton = activityCard.querySelector(".sub-activities-toggle");
+    if (toggleButton) {
+      toggleButton.addEventListener("click", () => {
+        const subActivitiesList = activityCard.querySelector(".sub-activities-list");
+        const toggleIcon = toggleButton.querySelector(".toggle-icon");
+        const toggleText = toggleButton.querySelector(".toggle-text");
+        const isExpanded = toggleButton.getAttribute("data-expanded") === "true";
+
+        if (isExpanded) {
+          subActivitiesList.classList.add("hidden");
+          toggleIcon.textContent = "▼";
+          toggleText.textContent = "Show Sessions";
+          toggleButton.setAttribute("data-expanded", "false");
+        } else {
+          subActivitiesList.classList.remove("hidden");
+          toggleIcon.textContent = "▲";
+          toggleText.textContent = "Hide Sessions";
+          toggleButton.setAttribute("data-expanded", "true");
+        }
+      });
     }
 
     activitiesList.appendChild(activityCard);
@@ -642,9 +770,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Open registration modal
-  function openRegistrationModal(activityName) {
-    modalActivityName.textContent = activityName;
+  function openRegistrationModal(activityName, subActivityId = null, subActivityName = null) {
+    const displayName = subActivityName ? `${subActivityName} (${activityName})` : activityName;
+    modalActivityName.textContent = displayName;
     activityInput.value = activityName;
+    
+    // Set the sub-activity ID in hidden field
+    const subActivityInput = document.getElementById("sub-activity-id");
+    subActivityInput.value = subActivityId || "";
+    
     registrationModal.classList.remove("hidden");
     // Add slight delay to trigger animation
     setTimeout(() => {
@@ -765,22 +899,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const activity = event.target.dataset.activity;
     const email = event.target.dataset.email;
+    const subActivityId = event.target.dataset.subActivity;
+
+    const displayName = subActivityId ? "sub-activity" : activity;
 
     // Show confirmation dialog
     showConfirmationDialog(
-      `Are you sure you want to unregister ${email} from ${activity}?`,
+      `Are you sure you want to unregister ${email} from ${displayName}?`,
       async () => {
         try {
-          const response = await fetch(
-            `/activities/${encodeURIComponent(
-              activity
-            )}/unregister?email=${encodeURIComponent(
-              email
-            )}&teacher_username=${encodeURIComponent(currentUser.username)}`,
-            {
-              method: "POST",
-            }
-          );
+          let url = `/activities/${encodeURIComponent(
+            activity
+          )}/unregister?email=${encodeURIComponent(
+            email
+          )}&teacher_username=${encodeURIComponent(currentUser.username)}`;
+          
+          if (subActivityId) {
+            url += `&sub_activity_id=${encodeURIComponent(subActivityId)}`;
+          }
+
+          const response = await fetch(url, {
+            method: "POST",
+          });
 
           const result = await response.json();
 
@@ -826,18 +966,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const email = document.getElementById("email").value;
     const activity = activityInput.value;
+    const subActivityId = document.getElementById("sub-activity-id").value;
 
     try {
-      const response = await fetch(
-        `/activities/${encodeURIComponent(
-          activity
-        )}/signup?email=${encodeURIComponent(
-          email
-        )}&teacher_username=${encodeURIComponent(currentUser.username)}`,
-        {
-          method: "POST",
-        }
-      );
+      let url = `/activities/${encodeURIComponent(
+        activity
+      )}/signup?email=${encodeURIComponent(
+        email
+      )}&teacher_username=${encodeURIComponent(currentUser.username)}`;
+      
+      if (subActivityId) {
+        url += `&sub_activity_id=${encodeURIComponent(subActivityId)}`;
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+      });
 
       const result = await response.json();
 

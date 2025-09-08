@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from typing import Dict, Any, Optional, List
 
-from ..database import activities_collection, teachers_collection
+from backend.database import activities_collection, teachers_collection
 
 router = APIRouter(
     prefix="/activities",
@@ -64,8 +64,8 @@ def get_available_days() -> List[str]:
     return days
 
 @router.post("/{activity_name}/signup")
-def signup_for_activity(activity_name: str, email: str, teacher_username: Optional[str] = Query(None)):
-    """Sign up a student for an activity - requires teacher authentication"""
+def signup_for_activity(activity_name: str, email: str, teacher_username: Optional[str] = Query(None), sub_activity_id: Optional[str] = Query(None)):
+    """Sign up a student for an activity or sub-activity - requires teacher authentication"""
     # Check teacher authentication
     if not teacher_username:
         raise HTTPException(status_code=401, detail="Authentication required for this action")
@@ -79,10 +79,42 @@ def signup_for_activity(activity_name: str, email: str, teacher_username: Option
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
+    # Handle sub-activity signup
+    if sub_activity_id:
+        sub_activities = activity.get("sub_activities", [])
+        sub_activity = next((sa for sa in sub_activities if sa["id"] == sub_activity_id), None)
+        
+        if not sub_activity:
+            raise HTTPException(status_code=404, detail="Sub-activity not found")
+        
+        # Check if already signed up
+        if email in sub_activity["participants"]:
+            raise HTTPException(status_code=400, detail="Already signed up for this sub-activity")
+        
+        # Check capacity
+        if len(sub_activity["participants"]) >= sub_activity["max_participants"]:
+            raise HTTPException(status_code=400, detail="Sub-activity is full")
+        
+        # Add student to sub-activity participants
+        result = activities_collection.update_one(
+            {"_id": activity_name, "sub_activities.id": sub_activity_id},
+            {"$push": {"sub_activities.$.participants": email}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=500, detail="Failed to update sub-activity")
+        
+        return {"message": f"Signed up {email} for {sub_activity['name']} in {activity_name}"}
+    
+    # Handle main activity signup (existing logic)
     # Validate student is not already signed up
     if email in activity["participants"]:
         raise HTTPException(
             status_code=400, detail="Already signed up for this activity")
+
+    # Check capacity
+    if len(activity["participants"]) >= activity["max_participants"]:
+        raise HTTPException(status_code=400, detail="Activity is full")
 
     # Add student to participants
     result = activities_collection.update_one(
@@ -96,8 +128,8 @@ def signup_for_activity(activity_name: str, email: str, teacher_username: Option
     return {"message": f"Signed up {email} for {activity_name}"}
 
 @router.post("/{activity_name}/unregister")
-def unregister_from_activity(activity_name: str, email: str, teacher_username: Optional[str] = Query(None)):
-    """Remove a student from an activity - requires teacher authentication"""
+def unregister_from_activity(activity_name: str, email: str, teacher_username: Optional[str] = Query(None), sub_activity_id: Optional[str] = Query(None)):
+    """Remove a student from an activity or sub-activity - requires teacher authentication"""
     # Check teacher authentication
     if not teacher_username:
         raise HTTPException(status_code=401, detail="Authentication required for this action")
@@ -111,6 +143,30 @@ def unregister_from_activity(activity_name: str, email: str, teacher_username: O
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
+    # Handle sub-activity unregister
+    if sub_activity_id:
+        sub_activities = activity.get("sub_activities", [])
+        sub_activity = next((sa for sa in sub_activities if sa["id"] == sub_activity_id), None)
+        
+        if not sub_activity:
+            raise HTTPException(status_code=404, detail="Sub-activity not found")
+        
+        # Check if student is signed up
+        if email not in sub_activity["participants"]:
+            raise HTTPException(status_code=400, detail="Not registered for this sub-activity")
+        
+        # Remove student from sub-activity participants
+        result = activities_collection.update_one(
+            {"_id": activity_name, "sub_activities.id": sub_activity_id},
+            {"$pull": {"sub_activities.$.participants": email}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=500, detail="Failed to update sub-activity")
+        
+        return {"message": f"Unregistered {email} from {sub_activity['name']} in {activity_name}"}
+
+    # Handle main activity unregister (existing logic)
     # Validate student is signed up
     if email not in activity["participants"]:
         raise HTTPException(
