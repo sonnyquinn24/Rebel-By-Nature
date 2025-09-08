@@ -172,3 +172,32 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Hardhat and Ethereum development
+node_modules/
+artifacts/
+cache/
+typechain/
+typechain-types/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Hardhat
+coverage/
+coverage.json
+.openzeppelin/
+deployments/
+
+# Truffle
+build/
+
+# Foundry
+out/
+cache_forge/
+
+# Solidity
+*.abi
+*.bin
