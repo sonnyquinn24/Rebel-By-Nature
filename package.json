@@ -12,8 +12,10 @@
     "test": "hardhat test",
     "deploy": "hardhat run scripts/deploy.js",
     "deploy:localhost": "hardhat run scripts/deploy.js --network localhost",
+    "configure-tokens": "hardhat run scripts/configure-payment-tokens.js",
     "node": "hardhat node",
-    "verify": "hardhat verify"
+    "verify": "hardhat verify",
+    "validate": "./validate-implementation.sh"
   },
   "keywords": [
     "blockchain",
