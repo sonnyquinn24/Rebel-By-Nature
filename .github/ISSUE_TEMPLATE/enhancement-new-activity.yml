@@ -1,0 +1,92 @@
+name: Add New Activity
+description: Request to add a new extracurricular activity to the website
+title: "[Enhancement] Add Activity: "
+labels: ["enhancement", "new-activity"]
+assignees:
+  - copilot
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new activity! Please provide the details below so we can add it to the website.
+  
+  - type: input
+    id: activity-name
+    attributes:
+      label: Activity Name
+      description: What is the name of the new activity?
+      placeholder: e.g., Manga Maniacs, Chess Club, Drama Society
+    validations:
+      required: true
+  
+  - type: textarea
+    id: description
+    attributes:
+      label: Activity Description
+      description: Provide a brief description of what this activity is about
+      placeholder: Describe what students will do in this activity
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: What category does this activity belong to?
+      options:
+        - Sports
+        - Arts
+        - Academic
+        - Community
+        - Technology
+    validations:
+      required: true
+  
+  - type: input
+    id: schedule
+    attributes:
+      label: Schedule
+      description: When does this activity meet?
+      placeholder: e.g., Tuesdays at 7pm, Weekends 2-4pm
+    validations:
+      required: true
+  
+  - type: input
+    id: max-attendance
+    attributes:
+      label: Maximum Attendance
+      description: How many students can participate?
+      placeholder: e.g., 15 people, 20 students
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty Level (Optional)
+      description: Is this activity targeted at a specific skill level?
+      options:
+        - All levels
+        - Beginner
+        - Intermediate
+        - Advanced
+    validations:
+      required: false
+  
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Where does this activity take place?
+      placeholder: e.g., Library, Gymnasium, Art Room 201
+    validations:
+      required: false
+  
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other details about this activity?
+      placeholder: Special requirements, equipment needed, etc.
+    validations:
+      required: false

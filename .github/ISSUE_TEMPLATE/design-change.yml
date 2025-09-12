@@ -1,0 +1,83 @@
+name: Design Change
+description: Request changes to the website's appearance or styling
+title: "[Design] "
+labels: ["enhancement", "design"]
+assignees:
+  - copilot
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the design suggestion! Please tell us what you'd like to see changed about the website's appearance.
+  
+  - type: textarea
+    id: current-design
+    attributes:
+      label: What doesn't look right currently?
+      description: Describe what you think should be changed about the current design
+      placeholder: The current colors/layout/fonts don't...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: desired-design
+    attributes:
+      label: What should it look like instead?
+      description: Describe your ideal design or appearance
+      placeholder: It would look better if...
+    validations:
+      required: true
+  
+  - type: checkboxes
+    id: design-area
+    attributes:
+      label: What aspect of the design?
+      description: Select all that apply
+      options:
+        - label: Colors and color scheme
+        - label: Fonts and typography
+        - label: Layout and spacing
+        - label: Images and graphics
+        - label: Buttons and interactive elements
+        - label: Mobile/tablet appearance
+        - label: Overall branding
+  
+  - type: input
+    id: school-colors
+    attributes:
+      label: School Colors (if applicable)
+      description: If this relates to school branding, what are the official school colors?
+      placeholder: e.g., Navy blue and gold, Green and white
+    validations:
+      required: false
+  
+  - type: textarea
+    id: inspiration
+    attributes:
+      label: Examples or Inspiration
+      description: Do you have examples of other websites or designs you like?
+      placeholder: Links to other websites, images, or descriptions of styles you like
+    validations:
+      required: false
+  
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: How soon is this needed?
+      description: Is there a deadline for this change?
+      options:
+        - No rush - whenever convenient
+        - Before next month
+        - Before next week
+        - ASAP - for upcoming event
+    validations:
+      required: true
+  
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional Notes
+      description: Any other details about the design change?
+      placeholder: Special requirements, accessibility considerations, etc.
+    validations:
+      required: false
