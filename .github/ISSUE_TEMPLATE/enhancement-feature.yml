@@ -1,0 +1,75 @@
+name: Feature Enhancement
+description: Request a new feature or improvement to the website
+title: "[Enhancement] "
+labels: ["enhancement"]
+assignees:
+  - copilot
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement! Please describe what you'd like to see added or changed.
+  
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Need
+      description: What problem are you trying to solve or what need do you have?
+      placeholder: Describe the current situation and why it needs improvement
+    validations:
+      required: true
+  
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: What would you like to see happen?
+      placeholder: Describe your ideal solution
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature?
+      options:
+        - Low - Nice to have
+        - Medium - Would be helpful
+        - High - Important for daily use
+        - Critical - Blocking current work
+    validations:
+      required: true
+  
+  - type: checkboxes
+    id: area
+    attributes:
+      label: What area of the website does this affect?
+      description: Select all that apply
+      options:
+        - label: Activity listings
+        - label: Search and filtering
+        - label: User registration
+        - label: Login system
+        - label: Overall design/appearance
+        - label: Mobile/tablet experience
+        - label: Performance
+        - label: Other
+  
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: How will we know this is complete?
+      description: What specific things should work when this is done?
+      placeholder: List the specific behaviors or features that should be present
+    validations:
+      required: true
+  
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information that might be helpful?
+      placeholder: Screenshots, examples from other websites, specific requirements, etc.
+    validations:
+      required: false
