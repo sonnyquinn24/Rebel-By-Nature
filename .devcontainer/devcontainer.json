@@ -1,15 +1,61 @@
 {
-  "name": "Python 3",
+  "name": "Rebel By Nature - Full Stack Development",
   "image": "mcr.microsoft.com/vscode/devcontainers/python:3.13",
-  "forwardPorts": [8000],
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "forwardPorts": [8000, 8545, 3000],
+  "portsAttributes": {
+    "8000": {
+      "label": "FastAPI Server",
+      "onAutoForward": "notify"
+    },
+    "8545": {
+      "label": "Hardhat Network",
+      "onAutoForward": "silent"
+    },
+    "3000": {
+      "label": "Frontend Dev Server",
+      "onAutoForward": "notify"
+    }
+  },
   "postCreateCommand": "bash ./.devcontainer/postCreate.sh",
   "customizations": {
     "vscode": {
       "extensions": [
         "GitHub.copilot",
+        "GitHub.copilot-chat",
         "ms-python.python",
-        "ms-python.debugpy"
-      ]
+        "ms-python.debugpy",
+        "ms-python.flake8",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "bradlc.vscode-tailwindcss",
+        "JuanBlanco.solidity",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "GitHub.vscode-github-actions",
+        "ms-vscode.hexeditor",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black",
+        "python.linting.enabled": true,
+        "python.linting.flake8Enabled": true,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        },
+        "files.associations": {
+          "*.sol": "solidity"
+        }
+      }
     }
-  }
+  },
+  "remoteUser": "vscode"
 }

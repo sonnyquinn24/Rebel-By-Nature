@@ -18,7 +18,7 @@ env:
 jobs:
   find_exercise:
     name: Find Exercise Issue
-    uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.4.0
+    uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.7.0
 
   check_step_work:
     name: Check step work
@@ -49,11 +49,11 @@ jobs:
 
       - name: Check file changes
         id: changed-files
-        uses: tj-actions/changed-files@v46.0.5
+        uses: tj-actions/changed-files@v47
 
       - name: Check copilot-instructions.md
         id: check-instructions
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         continue-on-error: true
         with:
           script: |
@@ -72,7 +72,7 @@ jobs:
 
       - name: Check copilot-setup-steps.yml
         id: check-setup-steps
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         continue-on-error: true
         with:
           script: |
@@ -150,7 +150,7 @@ jobs:
         with:
           repository: skills/exercise-toolkit
           path: exercise-toolkit
-          ref: v0.6.0
+          ref: v0.7.0
 
       - name: Create comment - add step content
         run: |

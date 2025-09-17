@@ -15,7 +15,7 @@ env:
 jobs:
   find_exercise:
     name: Find Exercise Issue
-    uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.4.0
+    uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.7.0
 
   check_step_work:
     name: Check step work
@@ -33,7 +33,7 @@ jobs:
         with:
           repository: skills/exercise-toolkit
           path: exercise-toolkit
-          ref: v0.6.0
+          ref: v0.7.0
 
       # START: Check practical exercise
 
@@ -68,7 +68,7 @@ jobs:
 
       # TODO: replace with https://github.com/marketplace/actions/create-an-issue
       - name: Create issues
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -149,7 +149,7 @@ jobs:
         with:
           repository: skills/exercise-toolkit
           path: exercise-toolkit
-          ref: v0.4.0
+          ref: v0.7.0
 
       - name: Create comment - add step content
         run: |

@@ -209,3 +209,39 @@ cache_forge/
 
 # Joke Generator
 joke-history.txt
+
+# Additional Security and Development Files
+secrets.json
+private-keys.txt
+mnemonic.txt
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and Editor files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+.tmp/
+tmp/
+temp/
+
+# Build outputs
+dist/
+out/
+
+# Package lock files for security updates
+package-lock.json.bak
