@@ -118,9 +118,9 @@ if [ -d "backend" ]; then
     
     if [ -d "backend/routers" ]; then
         echo -e "   ${GREEN}✓${NC} Routers directory exists"
-        local router_count=$(ls backend/routers/*.py 2>/dev/null | wc -l)
+        router_count=$(ls backend/routers/*.py 2>/dev/null | wc -l)
         echo "   - Router files: $router_count"
-        if [ $router_count -gt 0 ]; then
+        if [ "$router_count" -gt 0 ]; then
             echo "   - Router files:"
             ls backend/routers/*.py 2>/dev/null | sed 's/^/      /' || echo "      None found"
         fi
@@ -129,7 +129,7 @@ if [ -d "backend" ]; then
     fi
     
     # Check Python files in backend
-    local py_files=$(find backend -name "*.py" 2>/dev/null | wc -l)
+    py_files=$(find backend -name "*.py" 2>/dev/null | wc -l)
     echo "   - Python files in backend: $py_files"
 else
     echo -e "   ${RED}❌${NC} Backend directory missing"
@@ -161,7 +161,7 @@ check_file "IMPLEMENTATION_SUMMARY.md" "Implementation summary"
 
 # Check for additional documentation
 if [ -d "docs" ]; then
-    local doc_count=$(find docs -name "*.md" 2>/dev/null | wc -l)
+    doc_count=$(find docs -name "*.md" 2>/dev/null | wc -l)
     echo "   📚 Total documentation files: $doc_count"
 fi
 echo ""
