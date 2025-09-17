@@ -7,7 +7,13 @@
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
     "deploy": "npx hardhat run scripts/deploy.js",
-    "node": "npx hardhat node"
+    "node": "npx hardhat node",
+    "joke": "node joke-generator.js"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "yargs": "^17.7.2",
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
