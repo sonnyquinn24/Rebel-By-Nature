@@ -1,0 +1,106 @@
+name: Copilot Setup Steps
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  setup-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Check for lint script
+      id: check-lint
+      run: |
+        if node -e "const pkg = require('./package.json'); process.exit(pkg.scripts && pkg.scripts.lint ? 0 : 1)"; then
+          echo "lint-exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "lint-exists=false" >> $GITHUB_OUTPUT
+        fi
+      
+    - name: Run linting
+      if: steps.check-lint.outputs.lint-exists == 'true'
+      run: npm run lint
+      
+    - name: Check for test script
+      id: check-test
+      run: |
+        if node -e "const pkg = require('./package.json'); process.exit(pkg.scripts && pkg.scripts.test ? 0 : 1)"; then
+          echo "test-exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "test-exists=false" >> $GITHUB_OUTPUT
+        fi
+      
+    - name: Run tests
+      if: steps.check-test.outputs.test-exists == 'true'
+      run: npm run test
+      
+    - name: Check for joke history file
+      id: check-history
+      run: |
+        if [ -f "joke-history.txt" ]; then
+          echo "history-exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "history-exists=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Archive joke history
+      if: steps.check-history.outputs.history-exists == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: joke-history-archive
+        path: joke-history.txt
+        retention-days: 30
+        
+    - name: Deploy web version (placeholder)
+      run: |
+        echo "🚀 Deployment Step (Manual Process Required)"
+        echo "=============================================="
+        echo ""
+        echo "This is a placeholder for the deployment process."
+        echo "To deploy the web version, please follow these manual steps:"
+        echo ""
+        echo "1. Build the project: npm run build (if build script exists)"
+        echo "2. Test the build locally: npm run start (if start script exists)"
+        echo "3. Deploy to your hosting platform:"
+        echo "   - For GitHub Pages: Enable Pages in repository settings"
+        echo "   - For Netlify: Connect repository and configure build settings"
+        echo "   - For Vercel: Import project and configure deployment"
+        echo "   - For custom server: Upload build files via FTP/SSH"
+        echo ""
+        echo "4. Update DNS settings if using custom domain"
+        echo "5. Test the deployed application"
+        echo "6. Monitor for any deployment issues"
+        echo ""
+        echo "💡 Consider adding automated deployment in future iterations"
+        
+    # Copilot Agent Onboarding (Commented Section)
+    # 
+    # To enable GitHub Copilot coding agent for this repository:
+    # 
+    # 1. Ensure Copilot is enabled for your organization/account
+    # 2. Configure issue templates for automated assignment
+    # 3. Set up branch protection rules for pull request reviews
+    # 4. Configure Copilot permissions and access levels
+    # 
+    # For detailed setup instructions, see:
+    # https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-code-review
+    # 
+    # Additional resources:
+    # - Copilot documentation: https://docs.github.com/en/copilot
+    # - Best practices: https://github.blog/2023-06-20-how-to-write-better-prompts-for-github-copilot/
+    # - Issue templates: https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests
