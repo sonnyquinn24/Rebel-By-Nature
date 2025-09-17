@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joke Generator - Web Version</title>
+    <style>
+        /**
+         * Joke Generator Web Interface
+         * 
+         * Features:
+         * - Category selection dropdown
+         * - Colorful joke display
+         * - Responsive design
+         * - Loading states
+         * - Error handling with retry
+         * 
+         * Usage:
+         *   1. Open this file in any modern web browser
+         *   2. Select a joke category from the dropdown
+         *   3. Click "Get Joke" to fetch and display a random joke
+         *   4. Jokes are displayed with colorful styling
+         * 
+         * Requirements:
+         *   - Modern web browser with fetch API support
+         *   - Internet connection to access joke API
+         */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .emoji {
+            font-size: 3em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        select {
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .joke-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .joke-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 300% 300%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .category-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .joke-setup {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .joke-punchline {
+            font-size: 1.4em;
+            color: #27ae60;
+            font-weight: 700;
+            line-height: 1.4;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading {
+            color: #667eea;
+            font-style: italic;
+            font-size: 1.2em;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #ffeaea;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .placeholder {
+            color: #95a5a6;
+            font-style: italic;
+            font-size: 1.1em;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            select, button {
+                width: 100%;
+            }
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="emoji">🎭</span>
+            <h1>Joke Generator</h1>
+            <p>Get ready to laugh with jokes from various categories!</p>
+        </div>
+
+        <div class="controls">
+            <select id="categorySelect">
+                <option value="random">🎲 Random</option>
+                <option value="programming">💻 Programming</option>
+                <option value="general">😄 General</option>
+                <option value="knockknock">🚪 Knock Knock</option>
+            </select>
+            <button id="getJokeBtn" onclick="fetchJoke()">Get Joke</button>
+        </div>
+
+        <div class="joke-container" id="jokeContainer">
+            <div class="placeholder">Click "Get Joke" to start laughing! 😊</div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by Official Joke API | Built with ❤️ and JavaScript</p>
+        </div>
+    </div>
+
+    <script>
+        const MAX_RETRIES = 3;
+        const RETRY_DELAY = 1000;
+
+        /**
+         * Fetch a joke from the API with retry logic
+         */
+        async function fetchJokeWithRetry(category = 'random', retryCount = 0) {
+            try {
+                let url = 'https://official-joke-api.appspot.com/';
+                
+                if (category === 'random') {
+                    url += 'random_joke';
+                } else {
+                    url += `jokes/${category}/random`;
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                // Handle different response formats
+                const joke = Array.isArray(data) ? data[0] : data;
+                
+                return {
+                    setup: joke.setup,
+                    punchline: joke.punchline,
+                    category: joke.type || category,
+                    id: joke.id || Date.now()
+                };
+            } catch (error) {
+                if (retryCount < MAX_RETRIES) {
+                    console.log(`Retry ${retryCount + 1}/${MAX_RETRIES}: ${error.message}`);
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                    return fetchJokeWithRetry(category, retryCount + 1);
+                }
+                throw new Error(`Failed to fetch joke after ${MAX_RETRIES} retries: ${error.message}`);
+            }
+        }
+
+        /**
+         * Display a joke in the container
+         */
+        function displayJoke(joke) {
+            const container = document.getElementById('jokeContainer');
+            container.innerHTML = `
+                <div class="category-badge">${joke.category}</div>
+                <div class="joke-setup">${joke.setup}</div>
+                <div class="joke-punchline">${joke.punchline}</div>
+            `;
+        }
+
+        /**
+         * Display loading state
+         */
+        function showLoading() {
+            const container = document.getElementById('jokeContainer');
+            container.innerHTML = `
+                <div class="spinner"></div>
+                <div class="loading">Fetching a hilarious joke...</div>
+            `;
+        }
+
+        /**
+         * Display error message
+         */
+        function showError(message) {
+            const container = document.getElementById('jokeContainer');
+            container.innerHTML = `
+                <div class="error">
+                    <strong>Oops!</strong> ${message}
+                    <br><br>
+                    <button onclick="fetchJoke()" style="margin-top: 10px;">Try Again</button>
+                </div>
+            `;
+        }
+
+        /**
+         * Main function to fetch and display a joke
+         */
+        async function fetchJoke() {
+            const categorySelect = document.getElementById('categorySelect');
+            const getJokeBtn = document.getElementById('getJokeBtn');
+            const category = categorySelect.value;
+
+            // Disable button and show loading
+            getJokeBtn.disabled = true;
+            getJokeBtn.textContent = 'Fetching...';
+            showLoading();
+
+            try {
+                const joke = await fetchJokeWithRetry(category);
+                displayJoke(joke);
+            } catch (error) {
+                console.error('Error fetching joke:', error);
+                showError(error.message + ' Please check your internet connection and try again.');
+            } finally {
+                // Re-enable button
+                getJokeBtn.disabled = false;
+                getJokeBtn.textContent = 'Get Joke';
+            }
+        }
+
+        /**
+         * Handle Enter key press on category select
+         */
+        document.getElementById('categorySelect').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                fetchJoke();
+            }
+        });
+
+        /**
+         * Initialize with a random joke on page load
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Uncomment the next line to auto-fetch a joke on page load
+            // fetchJoke();
+        });
+    </script>
+</body>
+</html>
