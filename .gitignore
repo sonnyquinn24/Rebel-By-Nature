@@ -206,3 +206,6 @@ cache_forge/
 # Solidity
 *.abi
 *.bin
+
+# Joke Generator
+joke-history.txt
