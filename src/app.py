@@ -30,6 +30,16 @@ app.mount("/static", StaticFiles(directory=os.path.join(current_dir, "static")),
 def root():
     return RedirectResponse(url="/static/index.html")
 
+# Health check endpoint for deployment monitoring
+@app.get("/health")
+def health_check():
+    """Health check endpoint for deployment validation and monitoring"""
+    return {
+        "status": "healthy",
+        "service": "Mergington High School Activities API",
+        "version": "1.0.0"
+    }
+
 # Include routers
 app.include_router(routers.activities.router)
 app.include_router(routers.auth.router)

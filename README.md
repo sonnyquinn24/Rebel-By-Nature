@@ -17,6 +17,30 @@ This repository showcases how teachers and non-technical staff can request websi
 
 ### 📚 [Complete Guide for Teachers](docs/copilot-guide-for-teachers.md)
 
+## ⚡ Quick Deploy
+
+**Get the website running in 30 seconds:**
+
+```bash
+git clone https://github.com/sonnyquinn24/Rebel-By-Nature.git
+cd Rebel-By-Nature
+./start.sh
+```
+
+🌐 Visit http://localhost:8000
+
+### 🔧 [Quick Setup Guide](QUICK_START.md) | 📖 [Full Deployment Docs](docs/deployment.md)
+
+## 🚀 Fully Automated Deployment
+
+This repository includes complete deployment automation:
+
+- ✅ **GitHub Actions CI/CD** - Automatic testing and deployment
+- ✅ **Docker Support** - Containerized deployment with `docker-compose`
+- ✅ **Health Monitoring** - Built-in health checks and monitoring
+- ✅ **Multiple Environments** - Development, staging, and production configurations
+- ✅ **One-Command Deploy** - Simple scripts for instant deployment
+
 ## 🎯 Exercise: Learn Copilot Coding Agent
 
 [![](https://img.shields.io/badge/Go%20to%20Exercise-%E2%86%92-1f883d?style=for-the-badge&logo=github&labelColor=197935)](https://github.com/sonnyquinn24/Rebel-By-Nature/issues/1)
